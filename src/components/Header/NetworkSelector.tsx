@@ -151,7 +151,8 @@ const SelectorControls = styled.div<{ supportedChain: boolean }>`
     background-color: ${({ theme }) => darken(0.1, theme.deprecated_red1)};
   }
 `
-const SelectorLogo = styled(Logo)`
+const SelectorLogo = styled(Logo)<{ interactive?: boolean }>`
+  margin-right: ${({ interactive }) => (interactive ? 8 : 0)}px;
   @media screen and (min-width: ${MEDIA_WIDTHS.deprecated_upToSmall}px) {
     margin-right: 8px;
   }
@@ -288,8 +289,7 @@ export default function NetworkSelector() {
   const closeModal = useCloseModal(ApplicationModal.NETWORK_SELECTOR)
   const toggleModal = useToggleModal(ApplicationModal.NETWORK_SELECTOR)
 
-  const info = getChainInfo(chainId)
-
+  const info = chainId ? getChainInfo(chainId) : undefined
   const selectChain = useSelectChain()
   useSyncChainQuery()
 
@@ -298,6 +298,7 @@ export default function NetworkSelector() {
   }
 
   const onSupportedChain = info !== undefined
+  if (!info) return null
 
   return (
     <SelectorWrapper
@@ -307,7 +308,7 @@ export default function NetworkSelector() {
       onClick={isMobile ? toggleModal : undefined}
     >
       <SelectorControls supportedChain={onSupportedChain}>
-        {onSupportedChain ? (
+        {/* {onSupportedChain ? (
           <>
             <SelectorLogo src={info.logoUrl} />
             <SelectorLabel>{info.label}</SelectorLabel>
@@ -319,7 +320,11 @@ export default function NetworkSelector() {
             <NetworkAlertLabel>Switch Network</NetworkAlertLabel>
             <StyledChevronDown />
           </>
-        )}
+        )} */}
+        <>
+          <SelectorLogo interactive src={info.logoUrl} />
+          <StyledChevronDown />
+        </>
       </SelectorControls>
       {isOpen && (
         <FlyoutMenu>

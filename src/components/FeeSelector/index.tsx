@@ -1,24 +1,15 @@
-import { Trans } from '@lingui/macro'
 import { Currency } from '@uniswap/sdk-core'
 import { FeeAmount } from '@uniswap/v3-sdk'
 import { useWeb3React } from '@web3-react/core'
 import { sendEvent } from 'components/analytics'
-import { ButtonGray } from 'components/Button'
 import Card from 'components/Card'
 import { AutoColumn } from 'components/Column'
-import { RowBetween } from 'components/Row'
 import { useFeeTierDistribution } from 'hooks/useFeeTierDistribution'
 import { PoolState, usePools } from 'hooks/usePools'
 import usePrevious from 'hooks/usePrevious'
-import { DynamicSection } from 'pages/AddLiquidity/styled'
+// import { DynamicSection } from 'pages/AddLiquidity/styled'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Box } from 'rebass'
 import styled, { keyframes } from 'styled-components/macro'
-import { ThemedText } from 'theme'
-
-import { FeeOption } from './FeeOption'
-import { FeeTierPercentageBadge } from './FeeTierPercentageBadge'
-import { FEE_AMOUNT_DETAIL } from './shared'
 
 const pulse = (color: string) => keyframes`
   0% {
@@ -143,7 +134,7 @@ export default function FeeSelector({
 
   return (
     <AutoColumn gap="16px">
-      <DynamicSection gap="md" disabled={disabled}>
+      {/* <DynamicSection gap="md" disabled={disabled}>
         <FocusedOutlineCard pulsing={pulsing} onAnimationEnd={() => setPulsing(false)}>
           <RowBetween>
             <AutoColumn id="add-liquidity-selected-fee">
@@ -200,7 +191,7 @@ export default function FeeSelector({
             })}
           </Select>
         )}
-      </DynamicSection>
+      </DynamicSection> */}
     </AutoColumn>
   )
 }

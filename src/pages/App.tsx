@@ -1,251 +1,134 @@
-import { initializeAnalytics, sendAnalyticsEvent, user } from 'components/AmplitudeAnalytics'
-import { CUSTOM_USER_PROPERTIES, EventName, PageName } from 'components/AmplitudeAnalytics/constants'
-import { Trace } from 'components/AmplitudeAnalytics/Trace'
+import 'styles/global.scss'
+
+import Footer from 'BlockDEX/components/Footer'
+import Section from 'BlockDEX/components/Section'
+import { AuditBy, Benefits, BlockDEXStats, Introduction } from 'BlockDEX/containers/Introduction'
 import Loader from 'components/Loader'
 import TopLevelModals from 'components/TopLevelModals'
-import { useFeatureFlagsIsLoaded } from 'featureFlags'
-import { NavBarVariant, useNavBarFlag } from 'featureFlags/flags/navBar'
-import { NftVariant, useNftFlag } from 'featureFlags/flags/nft'
-import { TokensVariant, useTokensFlag } from 'featureFlags/flags/tokens'
 import ApeModeQueryParamReader from 'hooks/useApeModeQueryParamReader'
-import { lazy, Suspense, useEffect } from 'react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { useIsDarkMode } from 'state/user/hooks'
+import { Suspense, useEffect, useState } from 'react'
+import { Toaster } from 'react-hot-toast'
+import { Route, Routes } from 'react-router-dom'
 import styled from 'styled-components/macro'
-import { Z_INDEX } from 'theme'
-import { SpinnerSVG } from 'theme/components'
-import { getBrowser } from 'utils/browser'
-import { getCLS, getFCP, getFID, getLCP, Metric } from 'web-vitals'
 
-import { useAnalyticsReporter } from '../components/analytics'
+import { ReactComponent as Logo } from '../assets/svg/blockdex-logo-white.svg'
 import ErrorBoundary from '../components/ErrorBoundary'
 import Header from '../components/Header'
 import Polling from '../components/Header/Polling'
-import Navbar from '../components/NavBar'
-import Popups from '../components/Popups'
-import { useIsExpertMode } from '../state/user/hooks'
+import { useWindowSize } from '../hooks/perfectFund/useWindowSize'
 import DarkModeQueryParamReader from '../theme/DarkModeQueryParamReader'
-import AddLiquidity from './AddLiquidity'
-import { RedirectDuplicateTokenIds } from './AddLiquidity/redirects'
-import { RedirectDuplicateTokenIdsV2 } from './AddLiquidityV2/redirects'
-import Earn from './Earn'
-import Manage from './Earn/Manage'
-import MigrateV2 from './MigrateV2'
-import MigrateV2Pair from './MigrateV2/MigrateV2Pair'
-import Pool from './Pool'
-import { PositionPage } from './Pool/PositionPage'
-import PoolV2 from './Pool/v2'
-import PoolFinder from './PoolFinder'
-import RemoveLiquidity from './RemoveLiquidity'
-import RemoveLiquidityV3 from './RemoveLiquidity/V3'
-import Swap from './Swap'
-import { OpenClaimAddressModalAndRedirectToSwap, RedirectPathToSwapOnly, RedirectToSwap } from './Swap/redirects'
-import { LoadingTokenDetails } from './TokenDetails'
-import Tokens, { LoadingTokens } from './Tokens'
+import TestPage from './TestPage'
+import RedirectPathToTestOnly from './TestPage'
 
-const TokenDetails = lazy(() => import('./TokenDetails'))
-const Vote = lazy(() => import('./Vote'))
-const NftExplore = lazy(() => import('nft/pages/explore'))
-const Collection = lazy(() => import('nft/pages/collection'))
-const Sell = lazy(() => import('nft/pages/sell/sell'))
-const Asset = lazy(() => import('nft/pages/asset/Asset'))
-
-const AppWrapper = styled.div`
-  display: flex;
-  flex-flow: column;
-  align-items: flex-start;
-`
-
-const BodyWrapper = styled.div<{ navBarFlag: NavBarVariant }>`
+const BackgroundWrapper = styled.div`
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
   display: flex;
   flex-direction: column;
+  align-content: center;
+  justify-content: center;
   width: 100%;
-  padding: ${({ navBarFlag }) => (navBarFlag === NavBarVariant.Enabled ? `72px 0px 0px 0px` : `120px 0px 0px 0px`)};
-  align-items: center;
-  flex: 1;
-  ${({ theme }) => theme.deprecated_mediaWidth.deprecated_upToSmall`
-    padding: 52px 0px 16px 0px;
-  `};
+  background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url(images/main.webp);
+  height: 100%;
 `
 
-const HeaderWrapper = styled.div`
-  ${({ theme }) => theme.flexRowNoWrap}
+const BodyWrapper = styled.div`
+  max-width: 500px;
   width: 100%;
-  justify-content: space-between;
-  position: fixed;
-  top: 0;
-  z-index: ${Z_INDEX.absoluteTop};
+  border: 0 none;
+  background-color: #212429 !important;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 25px 50px #000;
+  margin-top: 10px;
+  margin-bottom: 10px;
 `
-
-const Marginer = styled.div`
-  margin-top: 5rem;
-`
-
-function getCurrentPageFromLocation(locationPathname: string): PageName | undefined {
-  switch (locationPathname) {
-    case '/swap':
-      return PageName.SWAP_PAGE
-    case '/vote':
-      return PageName.VOTE_PAGE
-    case '/pool':
-      return PageName.POOL_PAGE
-    case '/tokens':
-      return PageName.TOKENS_PAGE
-    default:
-      return undefined
-  }
-}
-
-// this is the same svg defined in assets/images/blue-loader.svg
-// it is defined here because the remote asset may not have had time to load when this file is executing
-const LazyLoadSpinner = () => (
-  <SpinnerSVG width="94" height="94" viewBox="0 0 94 94" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M92 47C92 22.1472 71.8528 2 47 2C22.1472 2 2 22.1472 2 47C2 71.8528 22.1472 92 47 92"
-      stroke="#2172E5"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </SpinnerSVG>
-)
 
 export default function App() {
-  const isLoaded = useFeatureFlagsIsLoaded()
-  const tokensFlag = useTokensFlag()
-  const navBarFlag = useNavBarFlag()
-  const nftFlag = useNftFlag()
-
-  const { pathname } = useLocation()
-  const currentPage = getCurrentPageFromLocation(pathname)
-  const isDarkMode = useIsDarkMode()
-  const isExpertMode = useIsExpertMode()
-
-  useAnalyticsReporter()
-  initializeAnalytics()
+  const win_size = useWindowSize()
+  const [screenMobile, setScreenMobile] = useState(false)
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
+    // @ts-ignore
+    if (win_size?.width < 640) {
+      setScreenMobile(true)
+    } else {
+      setScreenMobile(false)
+    }
+  }, [win_size])
 
-  useEffect(() => {
-    sendAnalyticsEvent(EventName.APP_LOADED)
-    user.set(CUSTOM_USER_PROPERTIES.BROWSER, getBrowser())
-    user.set(CUSTOM_USER_PROPERTIES.SCREEN_RESOLUTION_HEIGHT, window.screen.height)
-    user.set(CUSTOM_USER_PROPERTIES.SCREEN_RESOLUTION_WIDTH, window.screen.width)
-    getCLS(({ delta, id }: Metric) => sendAnalyticsEvent(EventName.WEB_VITALS, { cumulative_layout_shift: delta }))
-    getFCP(({ delta, id }: Metric) => sendAnalyticsEvent(EventName.WEB_VITALS, { first_contentful_paint_ms: delta }))
-    getFID(({ delta, id }: Metric) => sendAnalyticsEvent(EventName.WEB_VITALS, { first_input_delay_ms: delta }))
-    getLCP(({ delta, id }: Metric) => sendAnalyticsEvent(EventName.WEB_VITALS, { largest_contentful_paint_ms: delta }))
-  }, [])
-
-  useEffect(() => {
-    user.set(CUSTOM_USER_PROPERTIES.DARK_MODE, isDarkMode)
-  }, [isDarkMode])
-
-  useEffect(() => {
-    user.set(CUSTOM_USER_PROPERTIES.EXPERT_MODE, isExpertMode)
-  }, [isExpertMode])
-
+  const textWrapper = (
+    <div className="uk-flex uk-flex-column">
+      <div className="uk-h3 uk-text-white uk-margin-remove-bottom">Your access to crypto block </div>
+      <div className="uk-p uk-margin-remove">TRADE on the leading decentralized block trading protocol.</div>
+      <div className="uk-p uk-margin-remove">OWN the leading decentralized block trading protocol.</div>
+      <div className="uk-p uk-margin-remove">
+        Block DEX Protocol is a public good owned and governed by BDEX token holders.
+      </div>
+      <div className="uk-p uk-margin-remove">One-stop-shop decentralized block, large scale trading platform</div>
+      <div className="uk-divider-small" />
+      <div className="uk-p uk-margin-remove">Zero price impact to block order makers.</div>
+      <div className="uk-p uk-margin-remove">Zero commission to block order takers.</div>
+      <div className="uk-p uk-margin-remove">Most transparent price.</div>
+      <div className="uk-p uk-margin-remove">Tokens as ownership of the protocol.</div>
+      <div className="uk-flex uk-flex-row uk-margin-large-top">
+        <div
+          style={{
+            padding: '10px 20px',
+            marginRight: '15px',
+            fontSize: '25px',
+            fontWeight: 800,
+            color: 'white',
+            backgroundColor: '#29313D',
+            borderRadius: '4px',
+            border: '0px solid',
+          }}
+        >
+          LEARN MORE
+        </div>
+      </div>
+    </div>
+  )
   return (
     <ErrorBoundary>
       <DarkModeQueryParamReader />
       <ApeModeQueryParamReader />
-      <AppWrapper>
-        <Trace page={currentPage}>
-          <HeaderWrapper>{navBarFlag === NavBarVariant.Enabled ? <Navbar /> : <Header />}</HeaderWrapper>
-          <BodyWrapper navBarFlag={navBarFlag}>
-            <Popups />
-            <Polling />
-            <TopLevelModals />
-            <Suspense fallback={<Loader />}>
-              {isLoaded ? (
-                <Routes>
-                  {tokensFlag === TokensVariant.Enabled && (
-                    <>
-                      <Route
-                        path="/tokens"
-                        element={
-                          <Suspense fallback={<LoadingTokens />}>
-                            <Tokens />
-                          </Suspense>
-                        }
-                      />
-                      <Route
-                        path="/tokens/:tokenAddress"
-                        element={
-                          <Suspense fallback={<LoadingTokenDetails />}>
-                            <TokenDetails />
-                          </Suspense>
-                        }
-                      />
-                    </>
-                  )}
-                  <Route
-                    path="vote/*"
-                    element={
-                      <Suspense fallback={<LazyLoadSpinner />}>
-                        <Vote />
-                      </Suspense>
-                    }
-                  />
-                  <Route path="create-proposal" element={<Navigate to="/vote/create-proposal" replace />} />
-                  <Route path="claim" element={<OpenClaimAddressModalAndRedirectToSwap />} />
-                  <Route path="uni" element={<Earn />} />
-                  <Route path="uni/:currencyIdA/:currencyIdB" element={<Manage />} />
 
-                  <Route path="send" element={<RedirectPathToSwapOnly />} />
-                  <Route path="swap/:outputCurrency" element={<RedirectToSwap />} />
-                  <Route path="swap" element={<Swap />} />
+      <BackgroundWrapper>
+        <Section title={null}>
+          <Logo width={`${!screenMobile ? '300px' : '200px'}`} height="76px" title="logo" />
+          <div className={`uk-flex ${!screenMobile ? 'uk-flex-row uk-flex-middle' : 'uk-flex-column'}`}>
+            {!screenMobile ? (
+              <div className="uk-width-3-5@m uk-padding-small">{textWrapper}</div>
+            ) : (
+              <div className="uk-p uk-padding-small uk-padding-remove-vertical uk-text-meta">
+                The #1 decentralized exchange for high volume with minimum slippage
+              </div>
+            )}
+            <div className="uk-flex uk-flex-column uk-flex-middle uk-flex-center uk-width-2-5@m uk-width-1-1">
+              <BodyWrapper>
+                <Header />
 
-                  <Route path="pool/v2/find" element={<PoolFinder />} />
-                  <Route path="pool/v2" element={<PoolV2 />} />
-                  <Route path="pool" element={<Pool />} />
-                  <Route path="pool/:tokenId" element={<PositionPage />} />
-
-                  <Route path="add/v2" element={<RedirectDuplicateTokenIdsV2 />}>
-                    <Route path=":currencyIdA" />
-                    <Route path=":currencyIdA/:currencyIdB" />
-                  </Route>
-                  <Route path="add" element={<RedirectDuplicateTokenIds />}>
-                    {/* this is workaround since react-router-dom v6 doesn't support optional parameters any more */}
-                    <Route path=":currencyIdA" />
-                    <Route path=":currencyIdA/:currencyIdB" />
-                    <Route path=":currencyIdA/:currencyIdB/:feeAmount" />
-                  </Route>
-
-                  <Route path="increase" element={<AddLiquidity />}>
-                    <Route path=":currencyIdA" />
-                    <Route path=":currencyIdA/:currencyIdB" />
-                    <Route path=":currencyIdA/:currencyIdB/:feeAmount" />
-                    <Route path=":currencyIdA/:currencyIdB/:feeAmount/:tokenId" />
-                  </Route>
-
-                  <Route path="remove/v2/:currencyIdA/:currencyIdB" element={<RemoveLiquidity />} />
-                  <Route path="remove/:tokenId" element={<RemoveLiquidityV3 />} />
-
-                  <Route path="migrate/v2" element={<MigrateV2 />} />
-                  <Route path="migrate/v2/:address" element={<MigrateV2Pair />} />
-
-                  <Route path="*" element={<RedirectPathToSwapOnly />} />
-
-                  {nftFlag === NftVariant.Enabled && (
-                    <>
-                      <Route path="/nfts/collection/:contractAddress" element={<Collection />} />
-                      <Route path="/nfts" element={<NftExplore />} />
-                      <Route path="/nft/sell" element={<Sell />} />
-                      <Route path="/nft/asset/:contractAddress/:tokenId" element={<Asset />} />
-                    </>
-                  )}
-                </Routes>
-              ) : (
-                <Loader />
-              )}
-            </Suspense>
-            <Marginer />
-          </BodyWrapper>
-        </Trace>
-      </AppWrapper>
+                <Polling />
+                <TopLevelModals />
+                <Suspense fallback={<Loader />}>
+                  <Routes>
+                    <Route path="/" element={<TestPage />} />
+                    <Route element={<RedirectPathToTestOnly />} />
+                  </Routes>
+                </Suspense>
+              </BodyWrapper>
+            </div>
+          </div>
+        </Section>
+        <Introduction />
+        <Benefits />
+        <BlockDEXStats />
+        <AuditBy />
+        <Footer />
+        <Toaster position="bottom-left" />
+      </BackgroundWrapper>
     </ErrorBoundary>
   )
 }

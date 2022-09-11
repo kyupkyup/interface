@@ -82,6 +82,7 @@ export interface Colors {
   deprecated_bg4: Color
   deprecated_bg5: Color
   deprecated_bg6: Color
+  bgCustom: Color
 
   deprecated_modalBG: Color
   deprecated_advancedBG: Color

@@ -4,11 +4,9 @@ import { useWeb3React } from '@web3-react/core'
 import { ElementName, Event, EventName } from 'components/AmplitudeAnalytics/constants'
 import { TraceEvent } from 'components/AmplitudeAnalytics/TraceEvent'
 import { StyledChevronDown, StyledChevronUp } from 'components/Icons'
-import WalletDropdown from 'components/WalletDropdown'
 import { getConnection } from 'connection/utils'
 import { NavBarVariant, useNavBarFlag } from 'featureFlags/flags/navBar'
-import { Portal } from 'nft/components/common/Portal'
-import { getIsValidSwapQuote } from 'pages/Swap'
+// import { getIsValidSwapQuote } from 'pages/Swap'
 import { darken } from 'polished'
 import { useMemo, useRef } from 'react'
 import { AlertTriangle } from 'react-feather'
@@ -182,7 +180,7 @@ function Web3StatusInner() {
     trade: { state: tradeState, trade },
     inputError: swapInputError,
   } = useDerivedSwapInfo()
-  const validSwapQuote = getIsValidSwapQuote(trade, tradeState, swapInputError)
+  // const validSwapQuote = getIsValidSwapQuote(trade, tradeState, swapInputError)
   const navbarFlagEnabled = useNavBarFlag() === NavBarVariant.Enabled
   const theme = useTheme()
   const toggleWalletDropdown = useToggleWalletDropdown()
@@ -247,7 +245,7 @@ function Web3StatusInner() {
       <TraceEvent
         events={[Event.onClick]}
         name={EventName.CONNECT_WALLET_BUTTON_CLICKED}
-        properties={{ received_swap_quote: validSwapQuote }}
+        // properties={{ received_swap_quote: validSwapQuote }}
         element={ElementName.CONNECT_WALLET_BUTTON}
       >
         {navbarFlagEnabled ? (
@@ -304,11 +302,11 @@ export default function Web3Status() {
     <span ref={ref}>
       <Web3StatusInner />
       <WalletModal ENSName={ENSName ?? undefined} pendingTransactions={pending} confirmedTransactions={confirmed} />
-      <Portal>
+      {/* <Portal>
         <span ref={walletRef}>
           <WalletDropdown />
         </span>
-      </Portal>
+      </Portal> */}
     </span>
   )
 }

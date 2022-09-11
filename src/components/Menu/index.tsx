@@ -38,6 +38,7 @@ export enum FlyoutAlignment {
   LEFT = 'LEFT',
   RIGHT = 'RIGHT',
 }
+console.log(MenuIcon)
 
 const StyledMenuIcon = styled(MenuIcon)`
   path {

@@ -16,6 +16,8 @@ import ERC20_ABI from 'abis/erc20.json'
 import ERC20_BYTES32_ABI from 'abis/erc20_bytes32.json'
 import ERC721_ABI from 'abis/erc721.json'
 import ERC1155_ABI from 'abis/erc1155.json'
+import FACTORY_ABI from 'abis/factory.json'
+import PAIR_ABI from 'abis/pair.json'
 import { ArgentWalletDetector, EnsPublicResolver, EnsRegistrar, Erc20, Erc721, Erc1155, Weth } from 'abis/types'
 import WETH_ABI from 'abis/weth.json'
 import {
@@ -84,8 +86,29 @@ export function useWETHContract(withSignerIfPossible?: boolean) {
   )
 }
 
+export function useFactoryContract() {
+  const { provider, account, chainId } = useWeb3React() // web3 react
+  if (!provider || !chainId) return null
+  return getContract('0x37095e263f632eF9296E2f5bC635138f65746aA2', FACTORY_ABI, provider, account ? account : undefined)
+}
+
+export function usePairContract2() {
+  const { provider, account, chainId } = useWeb3React() // web3 react
+  if (!provider || !chainId) return null
+  // TODO: ADD ETH/USDT Pair address after creating from factory.
+  return getContract('0x7d66c0fad51bf8e33f864b5b8ad5c6cc3a66ea1e', PAIR_ABI, provider, account ? account : undefined)
+}
+
 export function useERC721Contract(nftAddress?: string) {
   return useContract<Erc721>(nftAddress, ERC721_ABI, false)
+}
+
+export function useUSDCContract() {
+  return useContract<Weth>('0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', WETH_ABI)
+}
+
+export function useWETHTest() {
+  return useContract<Weth>('0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619', WETH_ABI)
 }
 
 export function useERC1155Contract(nftAddress?: string) {

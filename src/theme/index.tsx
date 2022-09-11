@@ -156,6 +156,7 @@ function oldColors(darkMode: boolean): Colors {
     deprecated_text5: darkMode ? '#2C2F36' : '#EDEEF2',
 
     // backgrounds / greys
+
     deprecated_bg0: darkMode ? '#191B1F' : '#FFF',
     deprecated_bg1: darkMode ? '#212429' : '#F7F8FA',
     deprecated_bg2: darkMode ? '#2C2F36' : '#EDEEF2',
@@ -163,6 +164,7 @@ function oldColors(darkMode: boolean): Colors {
     deprecated_bg4: darkMode ? '#565A69' : '#888D9B',
     deprecated_bg5: darkMode ? '#6C7284' : '#888D9B',
     deprecated_bg6: darkMode ? '#1A2028' : '#6C7284',
+    bgCustom: darkMode ? '#29313d' : '#29313d',
 
     //specialty colors
     deprecated_modalBG: darkMode ? 'rgba(0,0,0,.425)' : 'rgba(0,0,0,0.3)',
@@ -208,6 +210,7 @@ function oldColorsUpdated(darkMode: boolean): Colors {
     // base
     deprecated_white,
     deprecated_black,
+    bgCustom: darkMode ? '#29313d' : '#29313d',
 
     // text
     deprecated_text1: darkMode ? colorsDark.textPrimary : colorsLight.textPrimary,
@@ -237,6 +240,7 @@ function oldColorsUpdated(darkMode: boolean): Colors {
     deprecated_primary5: darkMode ? '#153d6f70' : '#FDEAF1',
 
     // color text
+
     deprecated_primaryText1: darkMode ? colorsDark.accentAction : colorsLight.accentAction,
 
     // secondary colors
