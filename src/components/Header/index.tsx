@@ -1,22 +1,13 @@
 import { Trans } from '@lingui/macro'
-import useScrollPosition from '@react-hook/window-scroll'
 import { useWeb3React } from '@web3-react/core'
-import { getChainInfoOrDefault } from 'constants/chainInfo'
-import { useTokensFlag } from 'featureFlags/flags/tokens'
-import { darken } from 'polished'
-import { NavLink, useLocation } from 'react-router-dom'
-import { Text } from 'rebass'
 import { useShowClaimPopup, useToggleSelfClaimModal } from 'state/application/hooks'
 import { useUserHasAvailableClaim } from 'state/claim/hooks'
-import { useNativeCurrencyBalances } from 'state/connection/hooks'
 import { useUserHasSubmittedClaim } from 'state/transactions/hooks'
-import { useDarkModeManager } from 'state/user/hooks'
-import styled, { useTheme } from 'styled-components/macro'
+import styled from 'styled-components/macro'
 
-import { ExternalLink, ThemedText } from '../../theme'
+import { ThemedText } from '../../theme'
 import { CardNoise } from '../earn/styled'
 import Menu from '../Menu'
-import Row from '../Row'
 import { Dots } from '../swap/styleds'
 import Web3Status from '../Web3Status'
 import NetworkSelector from './NetworkSelector'
@@ -83,38 +74,6 @@ const HeaderElement = styled.div`
   `};
 `
 
-const HeaderLinks = styled(Row)`
-  justify-self: center;
-  background-color: ${({ theme }) => theme.deprecated_bg0};
-  width: max-content;
-  padding: 2px;
-  border-radius: 16px;
-  display: grid;
-  grid-auto-flow: column;
-  grid-gap: 10px;
-  overflow: auto;
-  align-items: center;
-  ${({ theme }) => theme.deprecated_mediaWidth.deprecated_upToLarge`
-    justify-self: start;
-    `};
-  ${({ theme }) => theme.deprecated_mediaWidth.deprecated_upToMedium`
-    justify-self: center;
-  `};
-  ${({ theme }) => theme.deprecated_mediaWidth.deprecated_upToMedium`
-    flex-direction: row;
-    justify-content: space-between;
-    justify-self: center;
-    z-index: 99;
-    position: fixed;
-    bottom: 0; right: 50%;
-    transform: translate(50%,-50%);
-    margin: 0 auto;
-    background-color: ${({ theme }) => theme.deprecated_bg0};
-    border: 1px solid ${({ theme }) => theme.deprecated_bg2};
-    box-shadow: 0px 6px 10px rgb(0 0 0 / 2%);
-  `};
-`
-
 const AccountElement = styled.div<{ active: boolean }>`
   display: flex;
   flex-direction: row;
@@ -153,101 +112,11 @@ const UNIWrapper = styled.span`
   }
 `
 
-const BalanceText = styled(Text)`
-  ${({ theme }) => theme.deprecated_mediaWidth.deprecated_upToExtraSmall`
-    display: none;
-  `};
-`
-
-const Title = styled.a`
-  display: flex;
-  align-items: center;
-  pointer-events: auto;
-  justify-self: flex-start;
-  margin-right: 12px;
-  ${({ theme }) => theme.deprecated_mediaWidth.deprecated_upToSmall`
-    justify-self: center;
-  `};
-  :hover {
-    cursor: pointer;
-  }
-`
-
-const UniIcon = styled.div`
-  transition: transform 0.3s ease;
-  :hover {
-    transform: rotate(-5deg);
-  }
-
-  position: relative;
-`
-
 // can't be customized under react-router-dom v6
 // so we have to persist to the default one, i.e., .active
-const activeClassName = 'active'
-
-const StyledNavLink = styled(NavLink)`
-  ${({ theme }) => theme.flexRowNoWrap}
-  align-items: left;
-  border-radius: 3rem;
-  outline: none;
-  cursor: pointer;
-  text-decoration: none;
-  color: ${({ theme }) => theme.deprecated_text2};
-  font-size: 1rem;
-  font-weight: 500;
-  padding: 8px 12px;
-  word-break: break-word;
-  overflow: hidden;
-  white-space: nowrap;
-  &.${activeClassName} {
-    border-radius: 14px;
-    font-weight: 600;
-    justify-content: center;
-    color: ${({ theme }) => theme.deprecated_text1};
-    background-color: ${({ theme }) => theme.deprecated_bg1};
-  }
-
-  :hover,
-  :focus {
-    color: ${({ theme }) => darken(0.1, theme.deprecated_text1)};
-  }
-`
-
-const StyledExternalLink = styled(ExternalLink)`
-  ${({ theme }) => theme.flexRowNoWrap}
-  align-items: left;
-  border-radius: 3rem;
-  outline: none;
-  cursor: pointer;
-  text-decoration: none;
-  color: ${({ theme }) => theme.deprecated_text2};
-  font-size: 1rem;
-  width: fit-content;
-  margin: 0 12px;
-  font-weight: 500;
-
-  &.${activeClassName} {
-    border-radius: 14px;
-    font-weight: 600;
-    color: ${({ theme }) => theme.deprecated_text1};
-  }
-
-  :hover,
-  :focus {
-    color: ${({ theme }) => darken(0.1, theme.deprecated_text1)};
-    text-decoration: none;
-  }
-`
 
 export default function Header() {
-  const tokensFlag = useTokensFlag()
-
-  const { account, chainId } = useWeb3React()
-
-  const userEthBalance = useNativeCurrencyBalances(account ? [account] : [])?.[account ?? '']
-  const [darkMode] = useDarkModeManager()
-  const { deprecated_white, deprecated_black } = useTheme()
+  const { account } = useWeb3React()
 
   const toggleClaimModal = useToggleSelfClaimModal()
 
@@ -257,23 +126,8 @@ export default function Header() {
 
   const showClaimPopup = useShowClaimPopup()
 
-  const scrollY = useScrollPosition()
-
-  const { pathname } = useLocation()
-
-  const {
-    infoLink,
-    nativeCurrency: { symbol: nativeCurrencySymbol },
-  } = getChainInfoOrDefault(chainId)
-
   // work around https://github.com/remix-run/react-router/issues/8161
   // as we can't pass function `({isActive}) => ''` to className with styled-components
-  const isPoolActive =
-    pathname.startsWith('/pool') ||
-    pathname.startsWith('/add') ||
-    pathname.startsWith('/remove') ||
-    pathname.startsWith('/increase') ||
-    pathname.startsWith('/find')
 
   return (
     <HeaderFrame showBackground={false}>
